@@ -1,3 +1,67 @@
+Fork of Express Handlebars
+==========================
+
+This is a fork of
+[github.com/ericf/express-handlebars](https://github.com/ericf/express-handlebars)
+(Forked from version 3.0.0).
+
+The only change is that the express-handlebars hook `_compileTemplate` gets
+invoked with an additional third argument - `filePath` - the template path.
+
+#### `_compileTemplate(template, options, filePath)`
+
+Adding `filePath` as an argument made it an easy to use a mix of markdown
+and handlebars. Once `_compileTemplate` knows the filePath, it also knows the
+filename extension based on which the markdown processor is invoked after
+which express-handlebars compiles markdown as before:
+
+```js
+var exphbs  = require('express-handlebars');
+var marked = require('marked');
+
+exphbs.ExpressHandlebars.prototype._compileTemplate = function (
+  template, options, filePath) {
+
+    // Process markdown
+    template = _compileTemplateExt(template, options, filePath);
+
+    // Continue compile as usual.
+    return this.handlebars.compile(template, options);
+};
+
+function _compileTemplateExt(file, compilerOptions, filePath) {
+  var isMarkdown = filePath.match(/\.md\.handlebars$/) ? true: false;
+  return isMarkdown ? marked(file) : file;
+}
+```
+
+The above snippet detects if any filename extension is `.md.handlebars` instead
+of the ususal `.handlebars`. If so, it first compiles markdown and then hands it
+over to express-handlebars to compile as usual.
+
+If none of the templates have the `.md.handlebars` file extension, the above
+snippet would function just like the original
+[express-handlebars](https://github.com/ericf/express-handlebars)
+
+Templates which make use of use `.md.handlebars` might look like this:
+
+`home.handlebars`
+```html
+<strong>Read these long rules:</strong>
+<p>
+  {{> rules.md}}
+</p>
+```
+
+`rules.md.handlebars`:
+```markdown
+These are the rules...
+```
+
+Below is the README of the original
+[express-handlebars](https://github.com/ericf/express-handlebars)
+
+
 Express Handlebars
 ==================
 
